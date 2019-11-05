@@ -48,6 +48,11 @@ rules:
       - subjectaccessreviews
     verbs:
       - create
+  - nonResourceURLs:
+      - /apis/antctl.antrea.io/v1
+      - /apis/antctl.antrea.io/v1/*
+    verbs:
+      - get
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1

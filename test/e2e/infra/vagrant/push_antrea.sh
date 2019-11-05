@@ -8,7 +8,9 @@ THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 pushd $THIS_DIR
 
-ANTREA_YML=$THIS_DIR/../../../../build/yamls/antrea.yml
+ROOT_DIR=$THIS_DIR/../../../..
+ANTREA_YML=$ROOT_DIR/build/yamls/antrea.yml
+ANTCTL=$ROOT_DIR/bin/antctl
 
 if [ ! -f ssh-config ]; then
     echo "File ssh-config does not exist in current directory"
@@ -70,6 +72,19 @@ pids[0]=$!
 for ((i=1; i<=$NUM_WORKERS; i++)); do
     name="k8s-node-worker-$i"
     scp -F ssh-config $ANTREA_YML $name:~/ &
+    pids[$i]=$!
+done
+# Wait for all child processes to complete
+waitForNodes "${pids[@]}"
+echo "Done!"
+
+echo "Copying antctl to every node..."
+scp -F ssh-config "$ANTCTL" k8s-node-master:~ &
+pids[0]=$!
+# Loop over all worker nodes and copy antctl to each one
+for ((i=1; i =NUM_WORKERS; i++)); do
+    name="k8s-node-worker-$i"
+    scp -F ssh-config "$ANTCTL" $name:~/ &
     pids[$i]=$!
 done
 # Wait for all child processes to complete
